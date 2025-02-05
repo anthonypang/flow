@@ -5,7 +5,8 @@ import Image from "next/image";
 import { Button } from "./ui/button";
 import { LayoutDashboard, PenBox } from "lucide-react";
 import { checkUser } from "@/lib/checkUser";
-const header = async () => {
+
+const Header = async () => {
   await checkUser();
   return (
     <div className="fixed top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b">
@@ -57,4 +58,4 @@ const header = async () => {
   );
 };
 
-export default header;
+export default Header;

@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-const hero = () => {
+const Hero = () => {
   return (
     <div className="pb-20 px-4 h-screen flex items-center justify-center">
       <div className="container mx-auto text-center">
@@ -25,4 +25,4 @@ const hero = () => {
   );
 };
 
-export default hero;
+export default Hero;
