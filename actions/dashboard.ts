@@ -2,18 +2,20 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Decimal } from "@prisma/client/runtime/library";
+import { AccountType } from "@prisma/client";
 
 type Account = {
   name: string;
-  balance: Decimal;
+  balance: Decimal | number | string;
   type: AccountType;
   isDefault: boolean;
 };
 
-enum AccountType {
-  CURRENT = "CURRENT",
-  SAVINGS = "SAVINGS",
-}
+const serializeAccount = (account: Account) => {
+  const serialized = { ...account };
+  serialized.balance = (account.balance as Decimal).toNumber();
+  return serialized;
+};
 
 export const createAccount = async (account: Account) => {
   try {
@@ -31,7 +33,7 @@ export const createAccount = async (account: Account) => {
     }
 
     //convert balance to float
-    const balance = account.balance.toNumber();
+    const balance = parseFloat(account.balance as string);
     if (isNaN(balance)) {
       throw new Error("Invalid balance");
     }
@@ -68,11 +70,13 @@ export const createAccount = async (account: Account) => {
       },
     });
 
+    const serializedAccount = serializeAccount(newAccount);
+
     revalidatePath("/dashboard");
 
     return {
       success: true,
-      account: newAccount,
+      account: serializedAccount,
     };
   } catch (error) {
     console.error(error);
