@@ -4,8 +4,9 @@ import React from "react";
 import Image from "next/image";
 import { Button } from "./ui/button";
 import { LayoutDashboard, PenBox } from "lucide-react";
-
-const header = () => {
+import { checkUser } from "@/lib/checkUser";
+const header = async () => {
+  await checkUser();
   return (
     <div className="fixed top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b">
       <nav className="container mx-auto p-4 flex items-center justify-between">
