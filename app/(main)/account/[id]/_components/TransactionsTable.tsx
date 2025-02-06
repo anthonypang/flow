@@ -2,7 +2,15 @@
 
 import { categoryColors } from "@/app/data/categories";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenuContent,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { DropdownMenu } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -16,8 +24,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Transaction } from "@prisma/client";
 import { format } from "date-fns";
-import { Clock, RefreshCw } from "lucide-react";
-import React from "react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  MoreHorizontal,
+  RefreshCw,
+} from "lucide-react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type TransactionsTableProps = {
   transactions: Transaction[];
@@ -31,8 +46,38 @@ const recurringIntervals = {
 };
 
 const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  console.log(selectedIds);
+  const [sortConfig, setSortConfig] = useState<{
+    column: string;
+    direction: "asc" | "desc";
+  }>({
+    column: "date",
+    direction: "desc",
+  });
+
+  const router = useRouter();
   const filteredTransactions = transactions;
-  const handleSort = (column: string) => {};
+  const handleSort = (column: string) => {
+    setSortConfig({
+      column,
+      direction: sortConfig.direction === "asc" ? "desc" : "asc",
+    });
+  };
+
+  const handleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((prevId) => prevId !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    setSelectedIds((prev) =>
+      prev.length === filteredTransactions.length
+        ? []
+        : filteredTransactions.map((transaction) => transaction.id)
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -44,27 +89,55 @@ const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px]">
-                <Checkbox />
+                <Checkbox
+                  checked={
+                    selectedIds.length === filteredTransactions.length &&
+                    filteredTransactions.length > 0
+                  }
+                  onClick={handleSelectAll}
+                />
               </TableHead>
               <TableHead
                 className="cursor-pointer"
                 onClick={() => handleSort("date")}
               >
-                <div className="flex items-center gap-2">Date</div>
+                <div className="flex items-center gap-2">
+                  Date{" "}
+                  {sortConfig.column === "date" &&
+                    (sortConfig.direction === "asc" ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    ))}
+                </div>
               </TableHead>
               <TableHead>Description</TableHead>
               <TableHead
                 className="cursor-pointer"
                 onClick={() => handleSort("category")}
               >
-                <div className="flex items-center gap-2">Category</div>
+                <div className="flex items-center gap-2">
+                  Category{" "}
+                  {sortConfig.column === "category" &&
+                    (sortConfig.direction === "asc" ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    ))}
+                </div>
               </TableHead>
               <TableHead
                 className="cursor-pointer text-right"
                 onClick={() => handleSort("amount")}
               >
                 <div className="flex items-center gap-2 justify-end">
-                  Amount
+                  Amount{" "}
+                  {sortConfig.column === "amount" &&
+                    (sortConfig.direction === "asc" ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    ))}
                 </div>
               </TableHead>
               <TableHead>Recurring</TableHead>
@@ -86,7 +159,10 @@ const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
               filteredTransactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell>
-                    <Checkbox />
+                    <Checkbox
+                      checked={selectedIds.includes(transaction.id)}
+                      onClick={() => handleSelect(transaction.id)}
+                    />
                   </TableCell>
                   <TableCell>
                     {format(new Date(transaction.date), "PP")}
@@ -155,6 +231,35 @@ const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
                     )}
                   </TableCell>
                   <TableCell />
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="p-0 h-8 w-8">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            router.push(
+                              `/transaction/create?edit=${transaction.id}`
+                            )
+                          }
+                        >
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => {
+                            console.log("delete");
+                          }}
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
               ))
             )}
