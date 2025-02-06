@@ -4,15 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Decimal } from "@prisma/client/runtime/library";
-import { AccountType } from "@prisma/client";
-
-type Account = {
-  name: string;
-  balance: Decimal | number | string;
-  type: AccountType;
-  amount: Decimal | number | string;
-  isDefault: boolean;
-};
+import { Account } from "@prisma/client";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const serializeAccount = (obj: any) => {
@@ -43,7 +35,7 @@ export const createAccount = async (account: Account) => {
     }
 
     //convert balance to float
-    const balance = parseFloat(account.balance as string);
+    const balance = parseFloat(account.balance.toString());
     if (isNaN(balance)) {
       throw new Error("Invalid balance");
     }
@@ -94,7 +86,7 @@ export const createAccount = async (account: Account) => {
   }
 };
 
-export const getUserAccounts = async () => {
+export const getUserAccounts = async (): Promise<Account[]> => {
   try {
     const { userId } = await auth();
 
