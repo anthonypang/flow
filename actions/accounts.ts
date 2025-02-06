@@ -2,8 +2,13 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
+import { Account, Transaction } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import { revalidatePath } from "next/cache";
+
+type AccountWithTransactions = Account & {
+  transactions: Transaction[];
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const serializeAccount = (obj: any) => {
@@ -74,5 +79,57 @@ export const updateDefaultAccount = async (accountId: string) => {
   } catch (error) {
     console.error(error);
     throw new Error("Failed to update default account");
+  }
+};
+
+export const getAccount = async (
+  accountId: string
+): Promise<AccountWithTransactions | null> => {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const user = await db.user.findUnique({
+      where: {
+        clerkUserId: userId,
+      },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const account = await db.account.findUnique({
+      where: {
+        id: accountId,
+        userId: user.id,
+      },
+      include: {
+        transactions: {
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+        _count: {
+          select: {
+            transactions: true,
+          },
+        },
+      },
+    });
+
+    if (!account) {
+      return null;
+    }
+
+    return {
+      ...serializeAccount(account),
+      transactions: account.transactions.map(serializeAccount),
+    };
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to get account");
   }
 };
