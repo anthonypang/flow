@@ -61,6 +61,7 @@ const CreateAccountDrawer = ({ children }: { children: React.ReactNode }) => {
       reset();
       toast.success("Account created successfully");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newAccount, createAccountLoading]);
 
   useEffect(() => {
