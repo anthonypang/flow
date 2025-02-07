@@ -3,6 +3,7 @@ import NotFound from "@/app/not-found";
 import React, { Suspense } from "react";
 import TransactionsTable from "./_components/TransactionsTable";
 import BarLoader from "react-spinners/BarLoader";
+import AccountChart from "./_components/AccountChart";
 const AccountPage = async ({ params }: { params: { id: string } }) => {
   const { id } = await params;
 
@@ -39,7 +40,18 @@ const AccountPage = async ({ params }: { params: { id: string } }) => {
       </div>
 
       {/* Chart Section */}
-
+      <Suspense
+        fallback={
+          <BarLoader
+            className="mt-4"
+            width={"100%"}
+            color="#9333EA"
+            height={4}
+          />
+        }
+      >
+        <AccountChart transactions={transactions} />
+      </Suspense>
       {/* Transactions Section */}
       <Suspense
         fallback={
