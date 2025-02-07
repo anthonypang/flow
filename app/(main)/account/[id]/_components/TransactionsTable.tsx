@@ -34,7 +34,7 @@ import {
   Trash,
   X,
 } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import {
@@ -44,6 +44,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import useFetch from "@/hooks/use-fetch";
+import { bulkDeleteTransactions } from "@/actions/accounts";
+import { toast } from "sonner";
+import BarLoader from "react-spinners/BarLoader";
 
 type TransactionsTableProps = {
   transactions: Transaction[];
@@ -70,6 +74,12 @@ const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
   });
 
   const router = useRouter();
+
+  const {
+    data: deleteTransactionsData,
+    fetchData: deleteTransactions,
+    loading: isDeleting,
+  } = useFetch(bulkDeleteTransactions);
 
   const filteredTransactions = useMemo(() => {
     let result = [...transactions];
@@ -138,18 +148,37 @@ const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
     );
   };
 
-  const handleBulkDelete = () => {
-    console.log("delete");
-  };
-
   const handleClear = () => {
     setSearchTerm("");
     setTypeFilter("");
     setRecurringFilter("");
   };
 
+  const handleBulkDelete = () => {
+    if (
+      !window.confirm("Are you sure you want to delete these transactions?")
+    ) {
+      return;
+    }
+
+    deleteTransactions(selectedIds);
+  };
+
+  useEffect(() => {
+    if (deleteTransactionsData && !isDeleting) {
+      setSelectedIds([]);
+      toast.success("Transactions deleted successfully");
+    }
+  }, [deleteTransactionsData, isDeleting]);
+
   return (
     <div className="space-y-4">
+      <BarLoader
+        className="mt-4"
+        width={"100%"}
+        color="#9333EA"
+        loading={isDeleting}
+      />
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
@@ -375,7 +404,7 @@ const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
                         <DropdownMenuItem
                           className="text-destructive"
                           onClick={() => {
-                            console.log("delete");
+                            deleteTransactions([transaction.id]);
                           }}
                         >
                           Delete
