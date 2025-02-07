@@ -19,7 +19,7 @@ const useFetch = (callback: (...args: any[]) => Promise<any>) => {
     }
   };
 
-  return { data, error, loading, fetchData, setData };
+  return { data: data as any, error, loading, fetchData, setData };
 };
 
 export default useFetch;
