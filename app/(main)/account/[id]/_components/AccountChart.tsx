@@ -68,28 +68,34 @@ const AccountChart = ({ transactions }: AccountChartProps) => {
       return transactionDate >= startDate && transactionDate <= endOfDay(start);
     });
 
-    const grouped = filtered.reduce((acc, transaction) => {
-      const fullDate = new Date(transaction.date);
-      const displayDate = format(transaction.date, "MMM dd");
-      if (!acc[fullDate.getTime()]) {
-        acc[fullDate.getTime()] = {
-          date: displayDate,
-          fullDate,
-          income: 0,
-          expense: 0,
-        };
-      }
-      if (transaction.type === "INCOME") {
-        acc[fullDate.getTime()].income += parseFloat(
-          transaction.amount.toString()
-        );
-      } else {
-        acc[fullDate.getTime()].expense += parseFloat(
-          transaction.amount.toString()
-        );
-      }
-      return acc;
-    }, {} as Record<string, { date: string; fullDate: Date; income: number; expense: number }>);
+    const grouped = filtered.reduce(
+      (acc, transaction) => {
+        const fullDate = new Date(transaction.date);
+        const displayDate = format(transaction.date, "MMM dd");
+        if (!acc[fullDate.getTime()]) {
+          acc[fullDate.getTime()] = {
+            date: displayDate,
+            fullDate,
+            income: 0,
+            expense: 0,
+          };
+        }
+        if (transaction.type === "INCOME") {
+          acc[fullDate.getTime()].income += parseFloat(
+            transaction.amount.toString()
+          );
+        } else {
+          acc[fullDate.getTime()].expense += parseFloat(
+            transaction.amount.toString()
+          );
+        }
+        return acc;
+      },
+      {} as Record<
+        string,
+        { date: string; fullDate: Date; income: number; expense: number }
+      >
+    );
 
     return Object.values(grouped)
       .sort((a, b) => a.fullDate.getTime() - b.fullDate.getTime())
@@ -166,54 +172,56 @@ const AccountChart = ({ transactions }: AccountChartProps) => {
             </p>
           </div>
         </div>
-        <div className="h-[300px] w-full mt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={filteredTransactions}
-              margin={{
-                top: 10,
-                right: 10,
-                left: 10,
-                bottom: 0,
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="date" />
-              <YAxis
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) =>
-                  value.toLocaleString("en-US", {
-                    style: "currency",
-                    currency: "USD",
-                  })
-                }
-              />
-              <Tooltip
-                formatter={(value) =>
-                  value.toLocaleString("en-US", {
-                    style: "currency",
-                    currency: "USD",
-                  })
-                }
-              />
-              <Legend />
-              <Bar
-                name="Income"
-                dataKey="income"
-                fill="#22c55e"
-                radius={[4, 4, 0, 0]}
-              />
-              <Bar
-                name="Expense"
-                dataKey="expense"
-                fill="#f43f5e"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        {filteredTransactions.length > 0 && (
+          <div className="h-[300px] w-full mt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={filteredTransactions}
+                margin={{
+                  top: 10,
+                  right: 10,
+                  left: 10,
+                  bottom: 0,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="date" />
+                <YAxis
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) =>
+                    value.toLocaleString("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                    })
+                  }
+                />
+                <Tooltip
+                  formatter={(value) =>
+                    value.toLocaleString("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                    })
+                  }
+                />
+                <Legend />
+                <Bar
+                  name="Income"
+                  dataKey="income"
+                  fill="#22c55e"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  name="Expense"
+                  dataKey="expense"
+                  fill="#f43f5e"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
