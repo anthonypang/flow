@@ -1,6 +1,8 @@
 "use server";
 
+import aj from "@/lib/arcjet";
 import { db } from "@/lib/prisma";
+import { request } from "@arcjet/next";
 import { auth } from "@clerk/nextjs/server";
 import { RecurringInterval, Transaction } from "@prisma/client";
 import { revalidatePath } from "next/cache";
@@ -13,6 +15,22 @@ export const createTransaction = async (transaction: Transaction) => {
     }
 
     // Arcjet to add rate limiting
+    const req = await request();
+    const decision = await aj.protect(req, {
+      userId,
+      requested: 1,
+    });
+
+    if (decision.isDenied()) {
+      if (decision.reason.isRateLimit()) {
+        const { remaining, reset } = decision.reason;
+        throw new Error(
+          `Rate limit exceeded. ${remaining} requests remaining until ${reset}`
+        );
+      } else {
+        throw new Error("Request denied");
+      }
+    }
 
     const user = await db.user.findUnique({
       where: {
