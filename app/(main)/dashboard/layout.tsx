@@ -1,25 +1,20 @@
-import React, { Suspense } from "react";
-import BarLoader from "react-spinners/BarLoader";
+import DashboardPage from "./page";
+import { BarLoader } from "react-spinners";
+import { Suspense } from "react";
 
-const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+export default function Layout() {
   return (
     <div className="px-5">
-      <h1 className="text-6xl font-bold gradient-title mb-5">Dashboard</h1>
-      {/* Dashboard Page */}
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-6xl font-bold tracking-tight gradient-title">
+          Dashboard
+        </h1>
+      </div>
       <Suspense
-        fallback={
-          <BarLoader
-            className="mt-4"
-            width={"100%"}
-            color="#9333EA"
-            height={4}
-          />
-        }
+        fallback={<BarLoader className="mt-4" width={"100%"} color="#9333ea" />}
       >
-        {children}
+        <DashboardPage />
       </Suspense>
     </div>
   );
-};
-
-export default DashboardLayout;
+}
