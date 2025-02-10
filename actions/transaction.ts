@@ -185,3 +185,114 @@ export const scanReceipt = async (file: File) => {
     throw new Error("Error scanning receipt");
   }
 };
+
+export const getTransaction = async (id: string) => {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const user = await db.user.findUnique({
+    where: {
+      clerkUserId: userId,
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const transaction = await db.transaction.findUnique({
+    where: {
+      id,
+      userId: user.id,
+    },
+  });
+
+  if (!transaction) {
+    throw new Error("Transaction not found");
+  }
+
+  return serializeTransaction(transaction);
+};
+
+export const updateTransaction = async (
+  id: string,
+  transaction: Transaction
+) => {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const user = await db.user.findUnique({
+      where: {
+        clerkUserId: userId,
+      },
+    });
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const originalTransaction = await db.transaction.findUnique({
+      where: { id, userId: user.id },
+      include: { account: true },
+    });
+
+    if (!originalTransaction) {
+      throw new Error("Transaction not found");
+    }
+
+    const updatedTransaction = await db.transaction.update({
+      where: { id, userId: user.id },
+      data: transaction,
+    });
+
+    const oldBalanceChange =
+      originalTransaction.type === "INCOME"
+        ? Number(originalTransaction.amount)
+        : -Number(originalTransaction.amount);
+
+    const newBalanceChange =
+      updatedTransaction.type === "INCOME"
+        ? Number(updatedTransaction.amount)
+        : -Number(updatedTransaction.amount);
+
+    const balanceChange = newBalanceChange - oldBalanceChange;
+
+    const prismaTransaction = await db.$transaction(async (tx) => {
+      const updatedTransaction = await tx.transaction.update({
+        where: { id, userId: user.id },
+        data: {
+          ...transaction,
+          nextRecurringDate:
+            transaction.isRecurring && transaction.recurringInterval
+              ? calculateNextRecurringTransactionDate(
+                  transaction.date,
+                  transaction.recurringInterval
+                )
+              : null,
+        },
+      });
+
+      await tx.account.update({
+        where: { id: transaction.accountId },
+        data: {
+          balance: {
+            increment: balanceChange,
+          },
+        },
+      });
+
+      return updatedTransaction;
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath(`/account/${transaction.accountId}`);
+
+    return { success: true, data: serializeTransaction(prismaTransaction) };
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+};
