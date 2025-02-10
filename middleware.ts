@@ -8,6 +8,9 @@ const isProtectedRoute = createRouteMatcher([
   "/transaction(.*)",
 ]);
 
+// Add dynamic config to prevent static optimization attempts
+export const dynamic = "force-dynamic";
+
 export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
   if (isProtectedRoute(req)) {

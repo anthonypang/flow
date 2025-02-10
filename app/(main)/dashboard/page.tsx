@@ -9,6 +9,8 @@ import { getCurrentBudget } from "@/actions/budget";
 import BudgetProgress from "./_components/BudgetProgress";
 import DashboardOverview from "./_components/DashboardOverview";
 
+export const dynamic = "force-dynamic";
+
 const page = async () => {
   const accounts = await getUserAccounts();
   const defaultAccount = accounts?.find((account) => account.isDefault);
