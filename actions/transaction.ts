@@ -3,9 +3,13 @@
 import aj from "@/lib/arcjet";
 import { db } from "@/lib/prisma";
 import { request } from "@arcjet/next";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { auth } from "@clerk/nextjs/server";
 import { RecurringInterval, Transaction } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+
+const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
+
 export const createTransaction = async (transaction: Transaction) => {
   try {
     const { userId } = await auth();
@@ -119,4 +123,65 @@ const calculateNextRecurringTransactionDate = (
   }
 
   return date;
+};
+
+export const scanReceipt = async (file: File) => {
+  try {
+    const model = gemini.getGenerativeModel({
+      model: "gemini-1.5-flash",
+    });
+
+    // Convert file to ArrayBuffer
+    const arrayBuffer = await file.arrayBuffer();
+
+    // Convert ArrayBuffer to base64
+    const base64 = Buffer.from(arrayBuffer).toString("base64");
+
+    const prompt = `
+      Analyze this receipt image and extract the following information in JSON format:
+      - Total amount (just the number)
+      - Date (in ISO format)
+      - Description or items purchased (brief summary)
+      - Merchant/store name
+      - Suggested category (one of: housing,transportation,groceries,utilities,entertainment,food,shopping,healthcare,education,personal,travel,insurance,gifts,bills,other-expense )
+      
+      Only respond with valid JSON in this exact format:
+      {
+        "amount": number,
+        "date": "ISO date string",
+        "description": "string",
+        "merchantName": "string",
+        "category": "string"
+      }
+
+      If its not a recipt, return an empty object
+    `;
+
+    const result = await model.generateContent([
+      { inlineData: { data: base64, mimeType: file.type } },
+      prompt,
+    ]);
+
+    const response = await result.response;
+    const text = response.text();
+    const cleanedText = text.replace(/^```json\n/, "").replace(/\n```$/, "");
+
+    try {
+      const json = JSON.parse(cleanedText);
+
+      return {
+        amount: parseFloat(json.amount),
+        date: new Date(json.date),
+        description: json.description,
+        merchantName: json.merchantName,
+        category: json.category,
+      };
+    } catch (error) {
+      console.error("Error parsing JSON from Gemini", error);
+      throw new Error("Invalid JSON from Gemini");
+    }
+  } catch (error) {
+    console.error("Error scanning receipt", error);
+    throw new Error("Error scanning receipt");
+  }
 };
