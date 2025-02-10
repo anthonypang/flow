@@ -79,3 +79,20 @@ body {
     @apply gradient text-transparent bg-clip-text font-extrabold tracking-tighter pr-2 pb-2;
   }
 }
+
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientMove 3s ease infinite;
+}
