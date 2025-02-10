@@ -9,14 +9,17 @@ export type TransactionWithNumberAmount = Omit<Transaction, "amount"> & {
   amount: number;
 };
 
+type AddTransactionPageProps = {
+  searchParams: Promise<{ edit?: string }>;
+};
+
 const AddTransactionPage = async ({
   searchParams,
-}: {
-  searchParams: { edit?: string };
-}) => {
+}: AddTransactionPageProps) => {
+  const { edit } = await searchParams;
   const accounts = await getUserAccounts();
 
-  const editId = searchParams.edit;
+  const editId = edit;
 
   let initialData: TransactionWithNumberAmount | null = null;
 

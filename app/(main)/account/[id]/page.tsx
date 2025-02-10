@@ -4,7 +4,12 @@ import React, { Suspense } from "react";
 import TransactionsTable from "./_components/TransactionsTable";
 import BarLoader from "react-spinners/BarLoader";
 import AccountChart from "./_components/AccountChart";
-const AccountPage = async ({ params }: { params: { id: string } }) => {
+
+type AccountPageProps = {
+  params: Promise<{ id: string }>;
+};
+
+const AccountPage = async ({ params }: AccountPageProps) => {
   const { id } = await params;
 
   const account = await getAccount(id);
