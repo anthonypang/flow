@@ -139,7 +139,7 @@ const AddTransactionForm = ({
       setValue("accountId", data.account);
     }
   };
-  console.log(editMode);
+
   return (
     <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
       {/* AI Reciept Scanner */}
