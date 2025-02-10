@@ -30,6 +30,15 @@ import { CalendarIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import ReceiptScanner from "./ReceiptScanner";
+
+export type ReceiptData = {
+  amount: number;
+  date: string;
+  description: string;
+  category: string;
+  account: string;
+};
 
 type AddTransactionFormProps = {
   accounts: Account[];
@@ -95,9 +104,20 @@ const AddTransactionForm = ({
     (category) => category.type === watch("type")
   );
 
+  const onScanComplete = (data: ReceiptData) => {
+    if (data) {
+      setValue("amount", data.amount.toString());
+      setValue("date", new Date(data.date));
+      setValue("description", data.description);
+      setValue("category", data.category);
+      setValue("accountId", data.account);
+    }
+  };
+
   return (
     <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
       {/* AI Reciept Scanner */}
+      <ReceiptScanner onScanComplete={onScanComplete} />
       <div className="space-y-2">
         <label className="text-sm font-medium" htmlFor="type">
           Type
@@ -179,7 +199,7 @@ const AddTransactionForm = ({
           Category
         </label>
         <Select
-          defaultValue={watch("category")}
+          value={watch("category")}
           onValueChange={(value) => setValue("category", value)}
         >
           <SelectTrigger>
