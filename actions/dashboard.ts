@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Decimal } from "@prisma/client/runtime/library";
-import { Account } from "@prisma/client";
+import { Account, Transaction } from "@prisma/client";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const serializeAccount = (obj: any) => {
@@ -126,5 +126,38 @@ export const getUserAccounts = async (): Promise<Account[]> => {
   } catch (error) {
     console.error(error);
     throw new Error("Failed to get user accounts", { cause: error });
+  }
+};
+
+export const getDashboardData = async (): Promise<Transaction[]> => {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const user = await db.user.findUnique({
+      where: {
+        clerkUserId: userId,
+      },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const transactions = await db.transaction.findMany({
+      where: {
+        userId: user.id,
+      },
+      orderBy: {
+        date: "desc",
+      },
+    });
+
+    return transactions.map((transaction) => serializeAccount(transaction));
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to get dashboard data", { cause: error });
   }
 };
