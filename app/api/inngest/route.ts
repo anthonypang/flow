@@ -4,6 +4,7 @@ import {
   checkBudgetAlerts,
   triggerRecurringTransactions,
   processRecurringTransaction,
+  generateMonthlyReports,
 } from "@/lib/inngest/functions";
 
 // Create an API that serves zero functions
@@ -13,5 +14,6 @@ export const { GET, POST, PUT } = serve({
     checkBudgetAlerts,
     triggerRecurringTransactions,
     processRecurringTransaction,
+    generateMonthlyReports,
   ],
 });

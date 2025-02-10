@@ -12,12 +12,19 @@ import * as React from "react";
 
 interface EmailProps {
   userName: string;
-  type: "budget-alert" | "monthly-alert";
+  type: "budget-alert" | "monthly-report";
   data: {
-    percentageUsed: number;
-    budgetAmount: number;
-    totalExpenses: number;
-    accountName: string;
+    percentageUsed?: number;
+    budgetAmount?: number;
+    totalExpenses?: number;
+    accountName?: string;
+    insights?: string[];
+    monthName?: string;
+    stats?: {
+      totalIncome: number;
+      totalExpenses: number;
+      byCategory: { [key: string]: number };
+    };
   };
 }
 
@@ -26,51 +33,120 @@ export const Email = ({
   type = "budget-alert",
   data,
 }: EmailProps) => {
-  if (type === "monthly-alert") {
+  if (type === "monthly-report") {
     return (
       <Html>
         <Head />
+        <Preview>Your Monthly Financial Report</Preview>
+        <Body style={styles.body}>
+          <Container style={styles.container}>
+            <Heading style={styles.title}>Monthly Financial Report</Heading>
+
+            <Text style={styles.text}>Hello {userName},</Text>
+            <Text style={styles.text}>
+              Here&rsquo;s your financial summary for {data?.monthName}:
+            </Text>
+
+            {/* Main Stats */}
+            <Section style={styles.statsContainer}>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Total Income</Text>
+                <Text style={styles.heading}>
+                  ${data?.stats?.totalIncome.toFixed(2)}
+                </Text>
+              </div>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Total Expenses</Text>
+                <Text style={styles.heading}>
+                  ${data?.stats?.totalExpenses.toFixed(2)}
+                </Text>
+              </div>
+              {data?.stats?.totalIncome && data?.stats?.totalExpenses && (
+                <div style={styles.stat}>
+                  <Text style={styles.text}>Net</Text>
+                  <Text style={styles.heading}>
+                    $
+                    {(
+                      data?.stats?.totalIncome - data?.stats?.totalExpenses
+                    ).toFixed(2)}
+                  </Text>
+                </div>
+              )}
+            </Section>
+
+            {/* Category Breakdown */}
+            {data?.stats?.byCategory && (
+              <Section style={styles.section}>
+                <Heading style={styles.heading}>Expenses by Category</Heading>
+                {Object.entries(data?.stats?.byCategory).map(
+                  ([category, amount]) => (
+                    <div key={category} style={styles.row}>
+                      <Text style={styles.text}>{category}</Text>
+                      <Text style={styles.text}>${amount.toFixed(2)}</Text>
+                    </div>
+                  )
+                )}
+              </Section>
+            )}
+
+            {/* AI Insights */}
+            {data?.insights && (
+              <Section style={styles.section}>
+                <Heading style={styles.heading}>Flow AI Insights</Heading>
+                {data?.insights?.map((insight, index) => (
+                  <Text key={index} style={styles.text}>
+                    • {insight}
+                  </Text>
+                ))}
+              </Section>
+            )}
+
+            <Text style={styles.footer}>
+              Thank you for using Welth. Keep tracking your finances for better
+              financial health!
+            </Text>
+          </Container>
+        </Body>
       </Html>
     );
   }
 
-  return (
-    <Html>
-      <Head />
-      <Preview>Budget Alert</Preview>
-      <Body style={styles.body}>
-        <Container style={styles.container}>
-          <Heading style={styles.heading}>Budget Alert</Heading>
-          <Text style={styles.text}>Hello {userName},</Text>
-          <Text style={styles.text}>
-            {"You've used " +
-              data.percentageUsed.toFixed(2) +
-              "% of your monthly budget"}
-          </Text>
-          <Section style={styles.statsContainer}>
-            <div style={styles.stat}>
-              <Text style={styles.text}>Budget Amount</Text>
-              <Text style={styles.heading}>
-                ${data.budgetAmount.toFixed(2)}
-              </Text>
-            </div>
-            <div style={styles.stat}>
-              <Text style={styles.text}>Spent So Far</Text>
-              <Text style={styles.heading}>
-                ${data.totalExpenses.toFixed(2)}
-              </Text>
-            </div>
-            <div style={styles.stat}>
-              <Text style={styles.text}>Remaining</Text>
-              <Text style={styles.heading}>
-                ${(data.budgetAmount - data.totalExpenses).toFixed(2)}
-              </Text>
-            </div>
-          </Section>
-        </Container>
-      </Body>
-    </Html>
-  );
+  if (type === "budget-alert") {
+    return (
+      <Html>
+        <Head />
+        <Preview>Budget Alert</Preview>
+        <Body style={styles.body}>
+          <Container style={styles.container}>
+            <Heading style={styles.title}>Budget Alert</Heading>
+            <Text style={styles.text}>Hello {userName},</Text>
+            <Text style={styles.text}>
+              You&rsquo;ve used {data?.percentageUsed?.toFixed(1)}% of your
+              monthly budget.
+            </Text>
+            <Section style={styles.statsContainer}>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Budget Amount</Text>
+                <Text style={styles.heading}>${data?.budgetAmount}</Text>
+              </div>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Spent So Far</Text>
+                <Text style={styles.heading}>${data?.totalExpenses}</Text>
+              </div>
+              {data?.budgetAmount && data?.totalExpenses && (
+                <div style={styles.stat}>
+                  <Text style={styles.text}>Remaining</Text>
+                  <Text style={styles.heading}>
+                    ${data?.budgetAmount - data?.totalExpenses}
+                  </Text>
+                </div>
+              )}
+            </Section>
+          </Container>
+        </Body>
+      </Html>
+    );
+  }
 };
 
 const styles = {
@@ -78,29 +154,64 @@ const styles = {
     backgroundColor: "#f6f9fc",
     fontFamily: "-apple-system, sans-serif",
   },
-  heading: {
-    fontSize: "24px",
+  container: {
+    backgroundColor: "#ffffff",
+    margin: "0 auto",
+    padding: "20px",
+    borderRadius: "5px",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+  },
+  title: {
+    color: "#1f2937",
+    fontSize: "32px",
     fontWeight: "bold",
-    color: "#2f2f2f",
+    textAlign: "center" as const,
+    margin: "0 0 20px",
+  },
+  heading: {
+    color: "#1f2937",
+    fontSize: "20px",
+    fontWeight: "600",
+    margin: "0 0 16px",
   },
   text: {
+    color: "#4b5563",
     fontSize: "16px",
-    color: "#2f2f2f",
+    margin: "0 0 16px",
+  },
+  section: {
+    marginTop: "32px",
+    padding: "20px",
+    backgroundColor: "#f9fafb",
+    borderRadius: "5px",
+    border: "1px solid #e5e7eb",
   },
   statsContainer: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: "10px",
+    margin: "32px 0",
+    padding: "20px",
+    backgroundColor: "#f9fafb",
+    borderRadius: "5px",
   },
   stat: {
-    display: "flex",
-    flexDirection: "column" as const,
-    alignItems: "center",
+    marginBottom: "16px",
+    padding: "12px",
+    backgroundColor: "#fff",
+    borderRadius: "4px",
+    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
   },
-  container: {
-    border: "1px solid #e0e0e0",
-    borderRadius: "8px",
-    padding: "20px",
+  row: {
+    display: "flex",
+    justifyContent: "space-between",
+    padding: "12px 0",
+    borderBottom: "1px solid #e5e7eb",
+  },
+  footer: {
+    color: "#6b7280",
+    fontSize: "14px",
+    textAlign: "center" as const,
+    marginTop: "32px",
+    paddingTop: "16px",
+    borderTop: "1px solid #e5e7eb",
   },
 };
 
