@@ -101,7 +101,7 @@ const serializeTransaction = (transaction: Transaction) => {
   };
 };
 
-const calculateNextRecurringTransactionDate = (
+export const calculateNextRecurringTransactionDate = (
   startDate: Date,
   interval: RecurringInterval
 ) => {
