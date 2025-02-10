@@ -4,7 +4,6 @@ import { inngest } from "./client";
 import EmailTemplate from "@/emails/template";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { Transaction, RecurringInterval } from "@prisma/client";
-import { calculateNextRecurringTransactionDate } from "@/actions/transaction";
 
 export const checkBudgetAlerts = inngest.createFunction(
   { name: "Check Budget Alerts", id: "check-budget-alerts" },
@@ -224,3 +223,27 @@ function isTransactionDue(transaction: Transaction) {
   // If the transaction is due, return true
   return nextDue && nextDue <= today;
 }
+
+export const calculateNextRecurringTransactionDate = (
+  startDate: Date,
+  interval: RecurringInterval
+) => {
+  const date = new Date(startDate);
+
+  switch (interval) {
+    case "DAILY":
+      date.setDate(date.getDate() + 1);
+      break;
+    case "WEEKLY":
+      date.setDate(date.getDate() + 7);
+      break;
+    case "MONTHLY":
+      date.setMonth(date.getMonth() + 1);
+      break;
+    case "YEARLY":
+      date.setFullYear(date.getFullYear() + 1);
+      break;
+  }
+
+  return date;
+};
