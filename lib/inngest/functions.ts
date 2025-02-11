@@ -205,7 +205,7 @@ export const processRecurringTransaction = inngest.createFunction(
         });
 
         await tx.transaction.update({
-          where: { id: transactionId },
+          where: { id: transaction.id },
           data: {
             lastProcessed: new Date(),
             nextRecurringDate: calculateNextRecurringTransactionDate(
