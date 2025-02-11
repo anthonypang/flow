@@ -12,9 +12,9 @@ import { cn } from "@/lib/utils";
 import { Account } from "@prisma/client";
 import { Transaction } from "@prisma/client";
 import { format } from "date-fns";
-import { ArrowDownRight, ArrowUpRight, PieChart } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import React, { useState } from "react";
-import { Cell, Legend, ResponsiveContainer, Tooltip } from "recharts";
+import { Cell, Legend, ResponsiveContainer, Tooltip, PieChart } from "recharts";
 import { Pie } from "recharts";
 
 type DashboardOverviewProps = {
@@ -172,7 +172,11 @@ const DashboardOverview = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0 pb-5">
-          {pieChartData.length > 0 ? (
+          {pieChartData.length === 0 ? (
+            <p className="text-center text-muted-foreground py-4">
+              No expenses this month
+            </p>
+          ) : (
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -203,10 +207,6 @@ const DashboardOverview = ({
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="text-center text-sm text-muted-foreground">
-              No expenses found
             </div>
           )}
         </CardContent>
