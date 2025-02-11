@@ -58,7 +58,6 @@ const ReceiptScanner = ({ onScanComplete }: ReceiptScannerProps) => {
         onChange={handleFileChange}
         className="hidden"
         accept="image/*"
-        capture="environment"
       />
       <Button
         type="button"
