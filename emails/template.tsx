@@ -102,7 +102,7 @@ export const Email = ({
             )}
 
             <Text style={styles.footer}>
-              Thank you for using Welth. Keep tracking your finances for better
+              Thank you for using Flow. Keep tracking your finances for better
               financial health!
             </Text>
           </Container>
